@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>카카오 지도 API</title>
+</head>
+<body>
+	<div id="map" style="width:100%;height:100vh;"></div>
+
+	<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=270edb366e86843516d2b0745e055930"></script>
+	<script>
+        
+    
+		var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
+		    mapOption = {
+		        center: new kakao.maps.LatLng(35.116637, 128.989099), // 지도의 중심좌표
+		        level: 1, // 지도의 확대 레벨
+		        mapTypeId : kakao.maps.MapTypeId.ROADMAP // 지도종류
+		    }; 
+
+		// 지도를 생성한다 
+		var map = new kakao.maps.Map(mapContainer, mapOption); 
+        
+        var data = [
+            {
+                content:'제석관',
+                latlng: new kakao.maps.LatLng(35.116462, 128.988749)
+            },
+            {
+                content:'승학관',
+                latlng: new kakao.maps.LatLng(35.116068, 128.989481)
+            },
+            {
+                content:'면학관',
+                latlng: new kakao.maps.LatLng(35.116437, 128.989351)
+            },
+            {
+                content:'형설관',
+                latlng: new kakao.maps.LatLng(35.116778, 128.989412)
+            },
+            {
+                content:'창의관',
+                latlng: new kakao.maps.LatLng(35.116821, 128.988774)
+            }
+        ];
+
+        for (var i=0; i<data.length; i++)
+        {
+            // 지도에 마커를 생성하고 표시한다
+            var marker = new kakao.maps.Marker({
+		    position: data[i].latlng, // 마커의 좌표
+		    map: map // 마커를 표시할 지도 객체
+
+		    });
+
+       
+            // 인포윈도우를 생성합니다
+            var infowindow = new kakao.maps.InfoWindow({
+            content : data[i].content,
+            });
+  
+            // 마커 위에 인포윈도우를 표시합니다. 두번째 파라미터인 marker를 넣어주지 않으면 지도 위에 표시됩니다
+            infowindow.open(map, marker); 
+        }
+
+        
+	</script>
+</body>
+</html>
