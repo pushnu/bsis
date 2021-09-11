@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>주요 구역 밀집도 MAP</title>
+</head>
+<body>
+    <b>주요 구역의 밀집도를 실시간으로 확인하세요!</b><br>
+    약 10초마다 자동으로 업데이트됩니다.
+
+	<div id="map" style="width:100%;height:100vh;"></div>
+    
+	<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=270edb366e86843516d2b0745e055930"></script>
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-analytics.js";
+        import { getDatabase, ref, set, get, child, onValue } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-database.js";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+      
+        // Your web app's Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        const firebaseConfig = {
+          apiKey: "AIzaSyC_fsNDfYmITTbz-Zw6d1OXpmVGhzoGRRE",
+          authDomain: "bsis-sd.firebaseapp.com",
+          databaseURL: "https://bsis-sd-default-rtdb.asia-southeast1.firebasedatabase.app",
+          projectId: "bsis-sd",
+          storageBucket: "bsis-sd.appspot.com",
+          messagingSenderId: "651248864282",
+          appId: "1:651248864282:web:3f1a706a1adf934a3895a3",
+          measurementId: "G-MLBH2QS4BM"
+        };
+      
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        
+        const database = getDatabase();
+        /*
+        set(ref(database, 'minseo/'), {
+            username: "wow"
+        })*/
+        
+        var target;
+        const reff = ref(database, 'people_count/');
+        
+
+        /*
+        get(ref(database, 'minseo/')).then((snapshot) => {
+            console.log(snapshot);
+        }).catch((error) => {
+            console.error(error);
+        });*/
+        
+        /*
+        const btn = document.getElementById('insert');
+        const txt = document.getElementById('testwow');
+        btn.addEventListener('click', function(){
+            txt.innerHTML = target.total_people;
+        });*/
+        
+		var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
+		    mapOption = {
+		        center: new kakao.maps.LatLng(35.116637, 128.989099), // 지도의 중심좌표
+		        level: 1, // 지도의 확대 레벨
+		        mapTypeId : kakao.maps.MapTypeId.ROADMAP // 지도종류
+		    }; 
+
+		// 지도를 생성한다 
+		var map = new kakao.maps.Map(mapContainer, mapOption); 
+        
+        var positions = [
+            {
+                title: '면학관', 
+                latlng: new kakao.maps.LatLng(35.116439, 128.989367)
+            },
+            {
+                title: '제석관', 
+                latlng: new kakao.maps.LatLng(35.116441, 128.988758)
+            },
+            {
+                title: '형설관', 
+                latlng: new kakao.maps.LatLng(35.116779, 128.989404)
+            },
+            {
+                title: '창의관',
+                latlng: new kakao.maps.LatLng(35.116838, 128.988750)
+            }
+        ];
+
+        
+            /*   
+        for(let i=0; i < positions.length; i++){
+            var data = positions[i];
+            displayMarker(data);
+        }*/
+
+        function rand(min, max){
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        var sum = 0;
+        var gajungchi = [];
+        var gjsum = 0;
+        var hindex; var lindex;
+        var highest = 0;
+        var lowest = 100000;
+        var tmpArray = [];
+
+        onValue(reff, (snapshot) => {
+            highest = 0; lowest = 100000;
+            gajungchi[0] = 0;
+            for(let i=1; i < positions.length; i++){
+                gajungchi[i] = rand(-10, 10);
+            }
+            gjsum = gajungchi[1] + gajungchi[2] + gajungchi[3]
+
+            const data2 = snapshot.val();
+
+            console.log(data2);
+            target = data2.jaeseok;
+
+            for(let i=0; i < positions.length; i++){
+                if(i==0){ positions[i].value = target.total_people; }
+                if(i==1){ positions[i].value = target.total_people + gajungchi[1]; }
+                if(i==2){ positions[i].value = target.total_people + gajungchi[2]; }
+                if(i==3){ positions[i].value = target.total_people + gajungchi[3]; }
+            }
+            sum = 4*target.total_people + gjsum;
+
+            var tmp2 = [positions[0].value, positions[1].value, positions[2].value, positions[3].value];
+
+            tmpArray = tmp2.sort(function(a,b) {
+                return a-b;
+            });
+            
+            console.log(tmpArray);
+            for(let i=0; i < positions.length; i++){
+                if(highest < tmpArray[i]) {  highest = tmpArray[i]; }
+            }
+            for(let i=0; i < positions.length; i++){
+                if(lowest > tmpArray[i]) { lowest = tmpArray[i]; }
+            }
+            console.log(highest)
+            for(let i=0; i < positions.length; i++){
+                var data = positions[i];
+                displayMarker(data);
+            }
+        })
+
+        // 지도에 마커를 표시하는 함수입니다
+        function displayMarker(data) { 
+            var marker = new kakao.maps.Marker({
+                map: map,
+                position: data.latlng
+            });
+            var overlay = new kakao.maps.CustomOverlay({
+                yAnchor: 2,
+                position: marker.getPosition()
+            });
+
+            var content = document.createElement('div');
+            content.innerHTML =  data.title + " : <b>현재 " + String(data.value) + "명</b><br>전체 유동인구 중 " + String((data.value / sum * 100).toFixed(1)) + "%";
+            content.style.cssText = 'background: white; border: 1px solid black; width: 200px; height: 45px; text-align: center;';
+            if(data.value == highest){ content.style.cssText = content.style.cssText + "background-color: #e32636; color: #ffffff"; }
+            else if(data.value == lowest){ content.style.cssText = content.style.cssText + "background-color: #3bce9c; color: #ffffff"; }
+            // else { content.style.cssText = content.style.cssText + "background-color: #9345ee; color: #ffffff"; }
+
+            /*
+            var closeBtn = document.createElement('button');
+            closeBtn.innerHTML = 'X';
+            closeBtn.onclick = function () {
+                overlay.setMap(null);
+            };
+            */
+            
+            //content.appendChild(closeBtn);
+            overlay.setContent(content);
+
+            overlay.setMap(map);
+            /*
+            kakao.maps.event.addListener(marker, 'click', function() {
+                overlay.setMap(map);
+            });
+            */
+        }
+        
+
+        
+	</script>
+</body>
+</html>
